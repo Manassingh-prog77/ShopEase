@@ -1,95 +1,84 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import React, { useEffect, useState } from 'react';
+import Welcome from './components/Welcome';
+import HeroSection from './components/HeroSection';
+import Card from './components/Card';
+import CompactCategorySection from './components/Category';
 
 export default function Home() {
+  const [data, setData] = useState([]);
+  const[data2, setData2] = useState([]);
+  
+  const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+
+  const options = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-rapidapi-host': 'real-time-amazon-data.p.rapidapi.com',
+      'x-rapidapi-key': apiKey
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const url = 'https://real-time-amazon-data.p.rapidapi.com/search?query=electronics';
+      const response = await fetch(url, options);
+      const result = await response.json();
+      setData(result.data.products || []);
+      
+      const url2 = 'https://real-time-amazon-data.p.rapidapi.com/search?query=homeappliances';
+      const response2 = await fetch(url2, options);  
+      const result2 = await response2.json();
+      setData2(result2.data.products || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const renderCard = (deal) => {
+    return (
+      <Card
+        key={deal.asin}
+        asin={deal.asin || 'Invalid Call'}
+        photo={deal.product_photo || 'default-photo-url'}
+        title={deal.product_title || 'No Title Available'}
+        price={deal.product_price || 'Price Not Available'}
+        rating={deal.product_star_rating || 'No Rating'}
+        numRatings={deal.product_num_ratings || 0}
+        numOffers={deal.product_num_offers || 0}
+        minimumOfferPrice={deal.product_minimum_offer_price || 'Not Available'}
+        isBestSeller={deal.is_best_seller || false}
+        isAmazonChoice={deal.is_amazon_choice || false}
+        isPrime={deal.is_prime || false}
+        climatePledgeFriendly={deal.climate_pledge_friendly || false}
+        salesVolume={deal.sales_volume || 'Sales Volume Not Available'}
+        delivery={deal.delivery || 'Delivery Not Available'}
+        couponText={deal.coupon_text || ''}
+      />
+    );
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <>
+      <CompactCategorySection />
+      <Welcome />
+      <HeroSection />
+      <div className="container my-5">
+        <h1 className="text-center mb-5 display-4 fw-bold text-primary">Current Deals</h1>
+        <div className="row">
+          {data.slice(0, 12).map(deal => (
+            renderCard(deal)
+          ))}
+          {data2.slice(0, 12).map(deal => (
+            renderCard(deal)
+          ))}
         </div>
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </>
   );
 }
